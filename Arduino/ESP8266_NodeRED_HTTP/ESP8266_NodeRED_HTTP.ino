@@ -1,5 +1,9 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <SimpleDHT.h>
+
+int pinDHT11 = D4;
+SimpleDHT11 dht11(pinDHT11);
 
 const char ssid[] = "";
 const char password[] = "";
@@ -36,17 +40,23 @@ void loop() {
   }
   
   // STEP 2 - Data Acquisition
-  int randomOne = random(1, 98);
-  int randomTwo = random(99, 999); 
+  byte temperature = 0;
+  byte humidity = 0;
+  int err = SimpleDHTErrSuccess;
+  
+  if ((err = dht11.read(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
+    return;
+  }
+  
+  Serial.print("Data OK: ");
+  Serial.print((int)temperature); Serial.print(" *C, "); 
+  Serial.print((int)humidity); Serial.println(" %RH");
 
   if(millis() - lastMillis > 15000){
     lastMillis = millis();
 
-    Serial.println("Generated Data:");
-    Serial.println("RandomOne: " + String(randomOne) + ", RandomTwo: " + String(randomTwo));
-
     // STEP 3 - Generate data in URL query string format
-    String httpRequest = "rone=" + String(randomOne) + "&rtwo=" + String(randomTwo);
+    String httpRequest = "temperature=" + String(temperature) + "&humidity=" + String(humidity);
     
     // STEP 4 - HTTP API Request to Node-RED with URL /data
     WiFiClient client;

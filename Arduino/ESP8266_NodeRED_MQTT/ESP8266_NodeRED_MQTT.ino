@@ -1,5 +1,9 @@
 #include <ESP8266WiFi.h>
 #include <MQTT.h>
+#include <SimpleDHT.h>
+
+int pinDHT11 = D4;
+SimpleDHT11 dht11(pinDHT11);
 
 const char ssid[] = "";
 const char password[] = "";
@@ -26,6 +30,11 @@ void connectToWiFi() {
 
 void messageReceived(String &topic, String &payload) {
   Serial.println("incoming: " + topic + " - " + payload);
+
+  String pin = payload.substring(0, payload.indexOf(","));
+  String value = payload.substring(payload.indexOf(",") + 1);
+
+  digitalWrite(pin.toInt(), value.toInt());
 }
 
 void connectToFavoriotMQTT(){
@@ -53,6 +62,12 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
 
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
+
+  digitalWrite(D1, 0);
+  digitalWrite(D2, 0);
+
   // STEP 1 - Connecting to Wi-Fi router
   connectToWiFi();
 
@@ -73,16 +88,25 @@ void loop() {
   }
 
   // STEP 2 - Data Acquisition
-  int randomOne = random(1, 98);
-  int randomTwo = random(99, 999);
+  byte temperature = 0;
+  byte humidity = 0;
+  int err = SimpleDHTErrSuccess;
+  
+  if ((err = dht11.read(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
+    return;
+  }
+  
+  Serial.print("Sample OK: ");
+  Serial.print((int)temperature); Serial.print(" *C, "); 
+  Serial.print((int)humidity); Serial.println(" %RH");
 
   // STEP 3 - Publish a message with given interval.
   if (millis() - lastMillis > 10000) {
     lastMillis = millis();
 
     String mqttPayload = "{";
-    mqttPayload += "\"rone\":" + String(random(1, 10)) + ",";
-    mqttPayload += "\"rtwo\":" + String(random(11, 99));
+    mqttPayload += "\"temperature\":" + String(temperature) + ",";
+    mqttPayload += "\"humidity\":" + String(humidity);
     mqttPayload += "}";
     
     mqtt.publish(String(mqttPublishTopic), mqttPayload);
