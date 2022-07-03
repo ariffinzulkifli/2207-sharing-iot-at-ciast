@@ -96,7 +96,7 @@ void loop() {
     return;
   }
   
-  Serial.print("Sample OK: ");
+  Serial.print("Data OK: ");
   Serial.print((int)temperature); Serial.print(" *C, "); 
   Serial.print((int)humidity); Serial.println(" %RH");
 
