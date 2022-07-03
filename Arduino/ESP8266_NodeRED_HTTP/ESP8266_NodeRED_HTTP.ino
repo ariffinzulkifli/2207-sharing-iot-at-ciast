@@ -62,9 +62,10 @@ void loop() {
     WiFiClient client;
     HTTPClient http;
   
-    http.begin(client, "http://" + String(noderedServer) + "/" + String(noderedURL) + "?" + httpRequest);
+    http.begin(client, "http://" + String(noderedServer) + "/" + String(noderedURL));
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     
-    int httpCode = http.GET();
+    int httpCode = http.POST(httpRequest);
     
     if(httpCode > 0){
       Serial.print("HTTP Request: ");
